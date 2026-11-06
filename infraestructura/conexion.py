@@ -16,7 +16,7 @@ def obtener_conexion():
     password = os.environ.get("DB_PASSWORD")
 
     if not host or not usuario or not password:
-        raise ErrorDeConexion("Faltan variables de entorno para Oracle. ¿Copiaste el .env.example?")
+        raise ErrorDeConexion("Sin variables de entorno para Oracle. ¿Copiaste el .env.example?")
 
     conn = None
     try:
