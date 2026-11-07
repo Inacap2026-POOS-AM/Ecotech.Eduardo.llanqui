@@ -34,3 +34,11 @@ def consultar_api(reintentos=1):
         return resp.json()
     except requests.exceptions.Timeout:
         raise TimeoutError("El servidor externo tardó más de 10s en responder.")
+
+if __name__ == "__main__":
+    try:
+        datos = consultar_api(reintentos=1)
+        print("Datos obtenidos:", datos)
+    except Exception as e:
+        print(f"\n[Fallo controlado detectado]: {e}")
+        
