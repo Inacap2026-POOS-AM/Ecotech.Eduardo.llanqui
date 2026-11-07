@@ -12,10 +12,6 @@ BASE_URL = "https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php"
 if not TOKEN:
     raise SystemExit("Error: Falta TOKEN en el .env")
 
-# Obtiene el valor de API_KEY desde el entorno
-API_KEY = os.environ.get("API_KEY")
-headers = {"Authorization": f"Bearer {API_KEY}"}
-
 def renovar_token():
     global TOKEN
     # Simulamos la obtención de un nuevo token o credencial
