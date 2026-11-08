@@ -3,44 +3,28 @@ import oracledb
 from dominio.empleado import Empleado
 from dominio.exepciones import EmpleadoYaExisteException, ErrorBaseDeDatosException
 from infraestructura.conexion import obtener_conexion
+from seguridad_hash import registrar_usuario_hash
 
 class EmpleadoRepositorio:
+    def __init__(self):
+        self.db = obtener_conexion()
     
-    def guardar(self, empleado: Empleado):
-        """
-        paso 1, 2 y 3: Transaccion atomica (todo o nada):Ambas inserciones se hacen bajo la misma conexion.
-        Si ocurre un error, se realiza rollback eexplicito. Manejo de execpiones especificas de Oracle
-        (ORA-00001: unique constraint violated)
-        """
-        conn = None
+    def guardar_empleado_seguro(self, rut, nombre, password_plana):
+        cursor = self.db.cursor()
+
+        password_hash = registrar_usuario_hash(nombre, password_plana)
+        
         try:
-            conn = obtener_conexion()
-            cursor = conn.cursor()
-            # 1. Insertar en tabla persona
-            cursor.execute(
-                "INSERT INTO persona (rut, nombre) VALUES (:1, :2)",
-            (empleado.rut, empleado.nombre)
-            )
-            #2. Insertar en tabla empleado
-            cursor.execute(
-            "INSERT INTO empleado (rut, fecha_ingreso, sueldo_base, activo) VALUES (:1, :2, :3, :4)",
-            (empleado.rut, empleado.fecha_ingreso, empleado.sueldo_base, empleado.activo),
-            )
-            # Si ambas consultas fueron exitosas, se aprueba la transacción (Todo)
-            conn.commit()
-            return empleado
-        except oracledb.DatabaseError as e:
-            if conn:
-                conn.rollback()  # Operacion todo o nada (Nada)
-            error, = e.args
-            #Ora-00001: Restricción única violada(Clave primaria duplicada)
-            if error.code == 1:
-                raise EmpleadoYaExisteException(f"El RUT {empleado.rut} ya existe en la base de datos.") from e
-            else:
-                raise ErrorBaseDeDatosException(f"Error inesperado en la base de datos: {error.message}") from e
+            sql = "INSERT INTO empleados (rut, nombre, password_hash) VALUES (:1, :2, :3)"
+            cursor.execute(sql, (rut, nombre, password_hash))
+            self.db.commit()
+            print(f"[Exito] Empleado {nombre} con RUT {rut} guardado con seguridad en oracle.")
+        except EmpleadoYaExisteException:
+            print(f"[Error] El empleado con RUT {rut} ya existe en la base de datos.")
+        except Exception as e:
+            print(f"[Error] No se pudo guardar el empleado {nombre} con RUT {rut}: {e}")
         finally:
-            if conn:
-                conn.close()
+            cursor.close()
 
     @staticmethod
     def _fila_a_empleado(fila):
