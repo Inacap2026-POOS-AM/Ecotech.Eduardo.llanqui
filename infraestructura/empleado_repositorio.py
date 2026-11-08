@@ -5,13 +5,13 @@ import bcrypt
 from dominio.empleado import Empleado
 from dominio.exepciones import EmpleadoYaExisteException, ErrorBaseDeDatosException
 from infraestructura.conexion import obtener_conexion
-from seguridad_hash import registrar_usuario_hash
 
 class EmpleadoRepositorio:
     def __init__(self):
         self.db = obtener_conexion()
     
     def guardar_empleado_seguro(self, rut, email, password_plana):
+
         patron_rut = r'^\d{7,8}-[0-9kK]$'
         patron_email = r'^[\w\.-]+@[\w\.-]+\.\w+$'
 
@@ -22,17 +22,19 @@ class EmpleadoRepositorio:
             raise ValueError("Error de seguridad: el formato del email no es valido ")
         
         password_bytes = password_plana.encode('utf-8')
-        sal = bcrypt.gensalt()
+        sal = bcrypt.gensalt(rounds=12)
         password_hash = bcrypt.hashpw(password_bytes, sal).decode('utf-8')
-        
+
+        cursor = None
         try:
-            cursor = self.conexion.cursor()
+            cursor = self.db.cursor()
 
             sql = "INSERT INTO empleados (rut, email, password_hash) VALUES (:1, :2, :3)"
             cursor.execute(sql, (rut, email, password_hash))
 
             self.db.commit()
             print(f"[Exito] Empleado con RUT {rut} guardado con seguridad en oracle.")
+
         except EmpleadoYaExisteException:
             print(f"[Error] El empleado con RUT {rut} ya existe en la base de datos.")
 
@@ -40,12 +42,12 @@ class EmpleadoRepositorio:
             self.conexion.rollback()
             print(f"[Error en Oracle]: {e}")
         finally:
-            if 'cursor' in locals() and cursor:
+            if cursor:
                 cursor.close()
 
     def cerrar_conexion(self):
-        if self.conexion:
-            self.conexion.close() 
+        if self.db:
+            self.db.close() 
 
     @staticmethod
     def _fila_a_empleado(fila):
