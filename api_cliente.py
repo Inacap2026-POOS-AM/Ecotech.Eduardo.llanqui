@@ -4,17 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv() # Carga las variables definidas en el archivo .env
 
-# obtiene el token de la variable de entorno
 TOKEN = os.getenv("API_TOKEN")
 BASE_URL = "https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php"
 
-# Valida que la clave exista
 if not TOKEN:
     raise SystemExit("Error: Falta TOKEN en el .env")
 
 def renovar_token():
     global TOKEN
-    # Simulamos la obtención de un nuevo token o credencial
+
     TOKEN = os.getenv("API_TOKEN_NUEVO","token_para_prueba")  
     print("[Info] Token renovado con éxito.")
 
@@ -26,7 +24,7 @@ def consultar_api(reintentos=1):
             print("[Aviso] Token expirado. Renovando credenciales...")
             renovar_token()
             return consultar_api(reintentos - 1)
-        resp.raise_for_status()  # Lanza error si llega 404, 500, etc.
+        resp.raise_for_status() 
         return resp.json()
     except requests.exceptions.Timeout:
         raise TimeoutError("El servidor externo tardó más de 10s en responder.")
