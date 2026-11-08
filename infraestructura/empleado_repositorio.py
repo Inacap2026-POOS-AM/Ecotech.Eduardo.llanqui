@@ -1,5 +1,7 @@
 from datetime import date
 import oracledb
+import re
+import bcrypt
 from dominio.empleado import Empleado
 from dominio.exepciones import EmpleadoYaExisteException, ErrorBaseDeDatosException
 from infraestructura.conexion import obtener_conexion
@@ -9,22 +11,41 @@ class EmpleadoRepositorio:
     def __init__(self):
         self.db = obtener_conexion()
     
-    def guardar_empleado_seguro(self, rut, nombre, password_plana):
-        cursor = self.db.cursor()
+    def guardar_empleado_seguro(self, rut, email, password_plana):
+        patron_rut = r'^\d{7,8}-[0-9kK]$'
+        patron_email = r'^[\w\.-]+@[\w\.-]+\.\w+$'
 
-        password_hash = registrar_usuario_hash(nombre, password_plana)
+        if not re.match(patron_rut, rut):
+            raise ValueError("Error de seguridad: el formato del RUT no es valido ")
+
+        if not re.match(patron_email, email):
+            raise ValueError("Error de seguridad: el formato del email no es valido ")
+        
+        password_bytes = password_plana.encode('utf-8')
+        sal = bcrypt.gensalt()
+        password_hash = bcrypt.hashpw(password_bytes, sal).decode('utf-8')
         
         try:
-            sql = "INSERT INTO empleados (rut, nombre, password_hash) VALUES (:1, :2, :3)"
-            cursor.execute(sql, (rut, nombre, password_hash))
+            cursor = self.conexion.cursor()
+
+            sql = "INSERT INTO empleados (rut, email, password_hash) VALUES (:1, :2, :3)"
+            cursor.execute(sql, (rut, email, password_hash))
+
             self.db.commit()
-            print(f"[Exito] Empleado {nombre} con RUT {rut} guardado con seguridad en oracle.")
+            print(f"[Exito] Empleado con RUT {rut} guardado con seguridad en oracle.")
         except EmpleadoYaExisteException:
             print(f"[Error] El empleado con RUT {rut} ya existe en la base de datos.")
+
         except Exception as e:
-            print(f"[Error] No se pudo guardar el empleado {nombre} con RUT {rut}: {e}")
+            self.conexion.rollback()
+            print(f"[Error en Oracle]: {e}")
         finally:
-            cursor.close()
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+
+    def cerrar_conexion(self):
+        if self.conexion:
+            self.conexion.close() 
 
     @staticmethod
     def _fila_a_empleado(fila):
