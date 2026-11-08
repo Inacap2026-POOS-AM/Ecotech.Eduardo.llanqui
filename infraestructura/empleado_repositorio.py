@@ -5,21 +5,18 @@ import bcrypt
 from dominio.empleado import Empleado
 from dominio.exepciones import EmpleadoYaExisteException, ErrorBaseDeDatosException
 from infraestructura.conexion import obtener_conexion
+from validador import validar_rut, validar_email
 
 class EmpleadoRepositorio:
     def __init__(self):
         self.db = obtener_conexion()
     
     def guardar_empleado_seguro(self, rut, email, password_plana):
+        if not validar_rut(rut):
+            raise ValueError("Error de seguridad: el RUT '{rut}' no cumple con el formato valido ")
 
-        patron_rut = r'^\d{7,8}-[0-9kK]$'
-        patron_email = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-
-        if not re.match(patron_rut, rut):
-            raise ValueError("Error de seguridad: el formato del RUT no es valido ")
-
-        if not re.match(patron_email, email):
-            raise ValueError("Error de seguridad: el formato del email no es valido ")
+        if not validar_email(email):
+            raise ValueError("Error de seguridad: el email '{email}' no cumple con el formato valido ")
         
         password_bytes = password_plana.encode('utf-8')
         sal = bcrypt.gensalt(rounds=12)
