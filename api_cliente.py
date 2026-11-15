@@ -18,7 +18,9 @@ class TokenExpiradoError(Exception):
 
 def renovar_token():
     global TOKEN
-    TOKEN = os.getenv("API_TOKEN_NUEVO","token_para_prueba")  
+    nuevo = os.getenv("API_TOKEN_NUEVO")
+    if nuevo:
+        TOKEN = nuevo
     print("[Info] Token renovado con éxito.")
 
 def guardar_respaldo_local(datos):
