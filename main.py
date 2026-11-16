@@ -19,11 +19,10 @@ def main():
     print(f"Horas registradas para {nelson.nombre}: {nelson.total_horas()} hrs")
 
     # prueba de integracion con la API (endurecer + degradar)
-    print("\nObteniendo datos de la API con respaldo...")
-    resultado = obtener_datos_con_respaldo(max_reintentos=3, timeout=10)
-    print(f"origen de datos: {resultado['origen']}")
-    print(f"Cantidad de registros obtenidos: {len(resultado['datos'])}")
-    
+    print("\nConsultando servicio externo de farmacias")
+    datos = obtener_datos_con_respaldo(max_reintentos=3, timeout=10)
+    print(f"Cantidad de registros obtenidos: {len(datos)}")
+
 if __name__ == "__main__":
     main()
     
