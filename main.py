@@ -20,9 +20,11 @@ def main():
 
     # prueba de integracion con la API (endurecer + degradar)
     print("\nConsultando servicio externo de farmacias")
-    datos = obtener_datos_con_respaldo(max_reintentos=3, timeout=10)
-    print(f"Cantidad de registros obtenidos: {len(datos)}")
-
+    resultado = obtener_datos_con_respaldo(max_reintentos=3, timeout=10)
+    print(f"Origen de los datos : {resultado['origen']}")
+    print(f"Antiguedad (obtenido_en): {resultado['antiguedad']}")
+    print(f"Cantidad de registros obtenidos: {len(resultado['datos'])}")
+    
 if __name__ == "__main__":
     main()
     
