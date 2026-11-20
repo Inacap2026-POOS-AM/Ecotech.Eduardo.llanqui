@@ -36,7 +36,7 @@ class EmpleadoRepositorio:
             print(f"[Error] El empleado con RUT {rut} ya existe en la base de datos.")
 
         except Exception as e:
-            self.conexion.rollback()
+            self.db.rollback()
             print(f"[Error en Oracle]: {e}")
         finally:
             if cursor:
