@@ -26,7 +26,7 @@ class EmpleadoRepositorio:
         try:
             cursor = self.db.cursor()
 
-            sql = "INSERT INTO empleados (rut, email, password_hash) VALUES (:1, :2, :3)"
+            sql = "INSERT INTO empleado (rut, email, password_hash) VALUES (:1, :2, :3)"
             cursor.execute(sql, (rut, email, password_hash))
 
             self.db.commit()
